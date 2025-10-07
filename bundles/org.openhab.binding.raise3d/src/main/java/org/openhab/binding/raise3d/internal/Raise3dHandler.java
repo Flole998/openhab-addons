@@ -25,6 +25,7 @@ import org.openhab.binding.raise3d.internal.api.Raise3dPrinterData;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
+import org.openhab.core.library.unit.SIUnits;
 import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -212,7 +213,7 @@ public class Raise3dHandler extends BaseThingHandler {
         updateState(CHANNEL_FAN_TAR_SPEED, new DecimalType(data.fanTarSpeed));
         updateState(CHANNEL_FEED_CUR_RATE, new DecimalType(data.feedCurRate));
         updateState(CHANNEL_FEED_TAR_RATE, new DecimalType(data.feedTarRate));
-        updateState(CHANNEL_HEATBED_CUR_TEMP, new QuantityType<>(data.heatbedCurTemp, Units.CELSIUS));
-        updateState(CHANNEL_HEATBED_TAR_TEMP, new QuantityType<>(data.heatbedTarTemp, Units.CELSIUS));
+        updateState(CHANNEL_HEATBED_CUR_TEMP, new QuantityType<>(data.heatbedCurTemp, SIUnits.CELSIUS));
+        updateState(CHANNEL_HEATBED_TAR_TEMP, new QuantityType<>(data.heatbedTarTemp, SIUnits.CELSIUS));
     }
 }
