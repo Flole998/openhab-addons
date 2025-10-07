@@ -35,7 +35,7 @@ public class Raise3dPrinterData {
     public @Nullable String jobStatus;
 
     @SerializedName("print_progress")
-    public int printProgress;
+    public double printProgress;
 
     @SerializedName("printed_layer")
     public int printedLayer;

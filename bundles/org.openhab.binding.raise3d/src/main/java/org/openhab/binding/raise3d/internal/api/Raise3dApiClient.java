@@ -119,8 +119,9 @@ public class Raise3dApiClient {
 
     /**
      * Fetches complete printer data from all API endpoints.
+     * Silently ignores individual endpoint failures and only returns null if all endpoints fail.
      *
-     * @return Printer data or null if fetch failed
+     * @return Printer data or null if all fetches failed
      */
     public @Nullable Raise3dPrinterData fetchPrinterData() {
         String token = authToken;
@@ -131,28 +132,31 @@ public class Raise3dApiClient {
 
         try {
             Raise3dPrinterData data = new Raise3dPrinterData();
+            int successCount = 0;
 
-            // Fetch job status
-            if (!fetchJobStatus(token, data)) {
-                logger.debug("Failed to fetch job status");
-                return null;
+            // Fetch job status - silently ignore failure
+            if (fetchJobStatus(token, data)) {
+                successCount++;
             }
 
-            // Fetch system information
-            if (!fetchSystemInfo(token, data)) {
-                logger.debug("Failed to fetch system info");
-                return null;
+            // Fetch system information - silently ignore failure
+            if (fetchSystemInfo(token, data)) {
+                successCount++;
             }
 
-            // Fetch running status
-            if (!fetchRunningStatus(token, data)) {
-                logger.debug("Failed to fetch running status");
-                return null;
+            // Fetch running status - silently ignore failure
+            if (fetchRunningStatus(token, data)) {
+                successCount++;
             }
 
-            // Fetch basic info
-            if (!fetchBasicInfo(token, data)) {
-                logger.debug("Failed to fetch basic info");
+            // Fetch basic info - silently ignore failure
+            if (fetchBasicInfo(token, data)) {
+                successCount++;
+            }
+
+            // Only return null if all endpoints failed
+            if (successCount == 0) {
+                logger.debug("All API endpoints failed");
                 return null;
             }
 
