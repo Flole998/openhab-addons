@@ -160,11 +160,26 @@ public class Raise3dHandler extends BaseThingHandler {
         if (data.jobStatus != null) {
             updateState(CHANNEL_JOB_STATUS, new StringType(data.jobStatus));
         }
-        updateState(CHANNEL_PRINT_PROGRESS, new DecimalType(data.printProgress));
-        updateState(CHANNEL_PRINTED_LAYER, new DecimalType(data.printedLayer));
-        updateState(CHANNEL_PRINTED_TIME, new QuantityType<>(data.printedTime / 1000, Units.SECOND));
-        updateState(CHANNEL_TOTAL_LAYER, new DecimalType(data.totalLayer));
-        updateState(CHANNEL_TOTAL_TIME, new QuantityType<>(data.totalTime / 1000, Units.SECOND));
+        Double printProgress = data.printProgress;
+        if (printProgress != null) {
+            updateState(CHANNEL_PRINT_PROGRESS, new DecimalType(printProgress));
+        }
+        Integer printedLayer = data.printedLayer;
+        if (printedLayer != null) {
+            updateState(CHANNEL_PRINTED_LAYER, new DecimalType(printedLayer));
+        }
+        Long printedTime = data.printedTime;
+        if (printedTime != null) {
+            updateState(CHANNEL_PRINTED_TIME, new QuantityType<>(printedTime / 1000, Units.SECOND));
+        }
+        Integer totalLayer = data.totalLayer;
+        if (totalLayer != null) {
+            updateState(CHANNEL_TOTAL_LAYER, new DecimalType(totalLayer));
+        }
+        Long totalTime = data.totalTime;
+        if (totalTime != null) {
+            updateState(CHANNEL_TOTAL_TIME, new QuantityType<>(totalTime / 1000, Units.SECOND));
+        }
 
         // System information
         if (data.serialNumber != null) {
@@ -173,8 +188,14 @@ public class Raise3dHandler extends BaseThingHandler {
         if (data.apiVersion != null) {
             updateState(CHANNEL_API_VERSION, new StringType(data.apiVersion));
         }
-        updateState(CHANNEL_BATTERY, new DecimalType(data.battery));
-        updateState(CHANNEL_BRIGHTNESS, new DecimalType(data.brightness));
+        Integer battery = data.battery;
+        if (battery != null) {
+            updateState(CHANNEL_BATTERY, new DecimalType(battery));
+        }
+        Integer brightness = data.brightness;
+        if (brightness != null) {
+            updateState(CHANNEL_BRIGHTNESS, new DecimalType(brightness));
+        }
         if (data.dateTime != null) {
             updateState(CHANNEL_DATE_TIME, new StringType(data.dateTime));
         }
@@ -196,8 +217,14 @@ public class Raise3dHandler extends BaseThingHandler {
         if (data.model != null) {
             updateState(CHANNEL_MODEL, new StringType(data.model));
         }
-        updateState(CHANNEL_NOZZLES_NUM, new DecimalType(data.nozzlesNum));
-        updateState(CHANNEL_STORAGE_AVAILABLE, new QuantityType<>(data.storageAvailable, Units.BYTE));
+        Integer nozzlesNum = data.nozzlesNum;
+        if (nozzlesNum != null) {
+            updateState(CHANNEL_NOZZLES_NUM, new DecimalType(nozzlesNum));
+        }
+        Long storageAvailable = data.storageAvailable;
+        if (storageAvailable != null) {
+            updateState(CHANNEL_STORAGE_AVAILABLE, new QuantityType<>(storageAvailable, Units.BYTE));
+        }
         if (data.update != null) {
             updateState(CHANNEL_UPDATE, new StringType(data.update));
         }
@@ -209,11 +236,29 @@ public class Raise3dHandler extends BaseThingHandler {
         if (data.runningStatus != null) {
             updateState(CHANNEL_RUNNING_STATUS, new StringType(data.runningStatus));
         }
-        updateState(CHANNEL_FAN_CUR_SPEED, new DecimalType(data.fanCurSpeed));
-        updateState(CHANNEL_FAN_TAR_SPEED, new DecimalType(data.fanTarSpeed));
-        updateState(CHANNEL_FEED_CUR_RATE, new DecimalType(data.feedCurRate));
-        updateState(CHANNEL_FEED_TAR_RATE, new DecimalType(data.feedTarRate));
-        updateState(CHANNEL_HEATBED_CUR_TEMP, new QuantityType<>(data.heatbedCurTemp, SIUnits.CELSIUS));
-        updateState(CHANNEL_HEATBED_TAR_TEMP, new QuantityType<>(data.heatbedTarTemp, SIUnits.CELSIUS));
+        Integer fanCurSpeed = data.fanCurSpeed;
+        if (fanCurSpeed != null) {
+            updateState(CHANNEL_FAN_CUR_SPEED, new DecimalType(fanCurSpeed));
+        }
+        Integer fanTarSpeed = data.fanTarSpeed;
+        if (fanTarSpeed != null) {
+            updateState(CHANNEL_FAN_TAR_SPEED, new DecimalType(fanTarSpeed));
+        }
+        Integer feedCurRate = data.feedCurRate;
+        if (feedCurRate != null) {
+            updateState(CHANNEL_FEED_CUR_RATE, new DecimalType(feedCurRate));
+        }
+        Integer feedTarRate = data.feedTarRate;
+        if (feedTarRate != null) {
+            updateState(CHANNEL_FEED_TAR_RATE, new DecimalType(feedTarRate));
+        }
+        Integer heatbedCurTemp = data.heatbedCurTemp;
+        if (heatbedCurTemp != null) {
+            updateState(CHANNEL_HEATBED_CUR_TEMP, new QuantityType<>(heatbedCurTemp, SIUnits.CELSIUS));
+        }
+        Integer heatbedTarTemp = data.heatbedTarTemp;
+        if (heatbedTarTemp != null) {
+            updateState(CHANNEL_HEATBED_TAR_TEMP, new QuantityType<>(heatbedTarTemp, SIUnits.CELSIUS));
+        }
     }
 }

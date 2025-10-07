@@ -35,19 +35,19 @@ public class Raise3dPrinterData {
     public @Nullable String jobStatus;
 
     @SerializedName("print_progress")
-    public double printProgress;
+    public @Nullable Double printProgress;
 
     @SerializedName("printed_layer")
-    public int printedLayer;
+    public @Nullable Integer printedLayer;
 
     @SerializedName("printed_time")
-    public long printedTime;
+    public @Nullable Long printedTime;
 
     @SerializedName("total_layer")
-    public int totalLayer;
+    public @Nullable Integer totalLayer;
 
     @SerializedName("total_time")
-    public long totalTime;
+    public @Nullable Long totalTime;
 
     // System information
     @SerializedName("Serial_number")
@@ -57,10 +57,10 @@ public class Raise3dPrinterData {
     public @Nullable String apiVersion;
 
     @SerializedName("battery")
-    public int battery;
+    public @Nullable Integer battery;
 
     @SerializedName("brightness")
-    public int brightness;
+    public @Nullable Integer brightness;
 
     @SerializedName("date_time")
     public @Nullable String dateTime;
@@ -84,10 +84,10 @@ public class Raise3dPrinterData {
     public @Nullable String model;
 
     @SerializedName("nozzies_num")
-    public int nozzlesNum;
+    public @Nullable Integer nozzlesNum;
 
     @SerializedName("storage_available")
-    public long storageAvailable;
+    public @Nullable Long storageAvailable;
 
     @SerializedName("update")
     public @Nullable String update;
@@ -100,20 +100,20 @@ public class Raise3dPrinterData {
     public @Nullable String runningStatus;
 
     @SerializedName("fan_cur_speed")
-    public int fanCurSpeed;
+    public @Nullable Integer fanCurSpeed;
 
     @SerializedName("fan_tar_speed")
-    public int fanTarSpeed;
+    public @Nullable Integer fanTarSpeed;
 
     @SerializedName("feed_cur_rate")
-    public int feedCurRate;
+    public @Nullable Integer feedCurRate;
 
     @SerializedName("feed_tar_rate")
-    public int feedTarRate;
+    public @Nullable Integer feedTarRate;
 
     @SerializedName("heatbed_cur_temp")
-    public int heatbedCurTemp;
+    public @Nullable Integer heatbedCurTemp;
 
     @SerializedName("heatbed_tar_temp")
-    public int heatbedTarTemp;
+    public @Nullable Integer heatbedTarTemp;
 }
