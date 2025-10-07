@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * The {@link Raise3dApiClient} class handles communication with the Raise3D printer API.
@@ -72,8 +73,10 @@ public class Raise3dApiClient {
                     .timeout(TIMEOUT_MS, TimeUnit.MILLISECONDS).send();
 
             if (response.getStatus() == 200) {
+                TypeToken<Raise3dApiResponse<Raise3dLoginData>> typeToken = new TypeToken<>() {
+                };
                 Raise3dApiResponse<Raise3dLoginData> loginResponse = gson.fromJson(response.getContentAsString(),
-                        Raise3dApiResponse.class);
+                        typeToken.getType());
                 if (loginResponse != null && loginResponse.data != null && loginResponse.data.token != null) {
                     authToken = loginResponse.data.token;
                     logger.debug("Authentication successful");
@@ -167,8 +170,10 @@ public class Raise3dApiClient {
                     .timeout(TIMEOUT_MS, TimeUnit.MILLISECONDS).send();
 
             if (response.getStatus() == 200) {
+                TypeToken<Raise3dApiResponse<Raise3dPrinterData>> typeToken = new TypeToken<>() {
+                };
                 Raise3dApiResponse<Raise3dPrinterData> apiResponse = gson.fromJson(response.getContentAsString(),
-                        Raise3dApiResponse.class);
+                        typeToken.getType());
                 if (apiResponse != null && apiResponse.data != null) {
                     Raise3dPrinterData jobData = apiResponse.data;
                     data.fileName = jobData.fileName;
@@ -195,8 +200,10 @@ public class Raise3dApiClient {
                     .timeout(TIMEOUT_MS, TimeUnit.MILLISECONDS).send();
 
             if (response.getStatus() == 200) {
+                TypeToken<Raise3dApiResponse<Raise3dPrinterData>> typeToken = new TypeToken<>() {
+                };
                 Raise3dApiResponse<Raise3dPrinterData> apiResponse = gson.fromJson(response.getContentAsString(),
-                        Raise3dApiResponse.class);
+                        typeToken.getType());
                 if (apiResponse != null && apiResponse.data != null) {
                     Raise3dPrinterData sysData = apiResponse.data;
                     data.serialNumber = sysData.serialNumber;
@@ -230,8 +237,10 @@ public class Raise3dApiClient {
                     .timeout(TIMEOUT_MS, TimeUnit.MILLISECONDS).send();
 
             if (response.getStatus() == 200) {
+                TypeToken<Raise3dApiResponse<Raise3dPrinterData>> typeToken = new TypeToken<>() {
+                };
                 Raise3dApiResponse<Raise3dPrinterData> apiResponse = gson.fromJson(response.getContentAsString(),
-                        Raise3dApiResponse.class);
+                        typeToken.getType());
                 if (apiResponse != null && apiResponse.data != null) {
                     Raise3dPrinterData statusData = apiResponse.data;
                     data.runningStatus = statusData.runningStatus;
