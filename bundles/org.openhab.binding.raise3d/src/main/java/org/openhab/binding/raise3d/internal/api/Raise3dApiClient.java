@@ -12,7 +12,6 @@
  */
 package org.openhab.binding.raise3d.internal.api;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

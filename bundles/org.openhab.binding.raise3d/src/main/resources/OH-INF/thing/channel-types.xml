@@ -1,220 +1,220 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <thing:thing-descriptions bindingId="raise3d"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
-xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-<!-- Job Information Channels -->
-<channel-type id="fileName">
-<item-type>String</item-type>
-<label>File Name</label>
-<description>Name of the file being printed</description>
-<state readOnly="true"/>
-</channel-type>
+	<!-- Job Information Channels -->
+	<channel-type id="fileName">
+		<item-type>String</item-type>
+		<label>File Name</label>
+		<description>Name of the file being printed</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="jobId">
-<item-type>String</item-type>
-<label>Job ID</label>
-<description>ID of the current print job</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="jobId">
+		<item-type>String</item-type>
+		<label>Job ID</label>
+		<description>ID of the current print job</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="jobStatus">
-<item-type>String</item-type>
-<label>Job Status</label>
-<description>Status of the print job</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="jobStatus">
+		<item-type>String</item-type>
+		<label>Job Status</label>
+		<description>Status of the print job</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="printProgress">
-<item-type>Number:Dimensionless</item-type>
-<label>Print Progress</label>
-<description>Progress of the current print job (0-100%)</description>
-<state readOnly="true" pattern="%.0f %%"/>
-</channel-type>
+	<channel-type id="printProgress">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Print Progress</label>
+		<description>Progress of the current print job (0-100%)</description>
+		<state readOnly="true" pattern="%.0f %%"/>
+	</channel-type>
 
-<channel-type id="printedLayer">
-<item-type>Number</item-type>
-<label>Printed Layer</label>
-<description>Number of layers printed</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="printedLayer">
+		<item-type>Number</item-type>
+		<label>Printed Layer</label>
+		<description>Number of layers printed</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="printedTime">
-<item-type>Number:Time</item-type>
-<label>Printed Time</label>
-<description>Time elapsed for the print job</description>
-<state readOnly="true" pattern="%.0f %unit%"/>
-</channel-type>
+	<channel-type id="printedTime">
+		<item-type>Number:Time</item-type>
+		<label>Printed Time</label>
+		<description>Time elapsed for the print job</description>
+		<state readOnly="true" pattern="%.0f %unit%"/>
+	</channel-type>
 
-<channel-type id="totalLayer">
-<item-type>Number</item-type>
-<label>Total Layers</label>
-<description>Total number of layers in the print job</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="totalLayer">
+		<item-type>Number</item-type>
+		<label>Total Layers</label>
+		<description>Total number of layers in the print job</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="totalTime">
-<item-type>Number:Time</item-type>
-<label>Total Time</label>
-<description>Estimated total time for the print job</description>
-<state readOnly="true" pattern="%.0f %unit%"/>
-</channel-type>
+	<channel-type id="totalTime">
+		<item-type>Number:Time</item-type>
+		<label>Total Time</label>
+		<description>Estimated total time for the print job</description>
+		<state readOnly="true" pattern="%.0f %unit%"/>
+	</channel-type>
 
-<!-- System Information Channels -->
-<channel-type id="serialNumber">
-<item-type>String</item-type>
-<label>Serial Number</label>
-<description>Serial number of the printer</description>
-<state readOnly="true"/>
-</channel-type>
+	<!-- System Information Channels -->
+	<channel-type id="serialNumber">
+		<item-type>String</item-type>
+		<label>Serial Number</label>
+		<description>Serial number of the printer</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="apiVersion">
-<item-type>String</item-type>
-<label>API Version</label>
-<description>Version of the printer API</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="apiVersion">
+		<item-type>String</item-type>
+		<label>API Version</label>
+		<description>Version of the printer API</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="battery">
-<item-type>Number:Dimensionless</item-type>
-<label>Battery</label>
-<description>Battery level</description>
-<state readOnly="true" pattern="%.0f %%"/>
-</channel-type>
+	<channel-type id="battery">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery</label>
+		<description>Battery level</description>
+		<state readOnly="true" pattern="%.0f %%"/>
+	</channel-type>
 
-<channel-type id="brightness">
-<item-type>Number</item-type>
-<label>Brightness</label>
-<description>Screen brightness level</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="brightness">
+		<item-type>Number</item-type>
+		<label>Brightness</label>
+		<description>Screen brightness level</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="dateTime">
-<item-type>String</item-type>
-<label>Date Time</label>
-<description>Date and time on the printer</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="dateTime">
+		<item-type>String</item-type>
+		<label>Date Time</label>
+		<description>Date and time on the printer</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="firmwareVersion">
-<item-type>String</item-type>
-<label>Firmware Version</label>
-<description>Firmware version of the printer</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="firmwareVersion">
+		<item-type>String</item-type>
+		<label>Firmware Version</label>
+		<description>Firmware version of the printer</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="language">
-<item-type>String</item-type>
-<label>Language</label>
-<description>Language setting of the printer</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="language">
+		<item-type>String</item-type>
+		<label>Language</label>
+		<description>Language setting of the printer</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="machineId">
-<item-type>String</item-type>
-<label>Machine ID</label>
-<description>Machine ID of the printer</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="machineId">
+		<item-type>String</item-type>
+		<label>Machine ID</label>
+		<description>Machine ID of the printer</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="machineIp">
-<item-type>String</item-type>
-<label>Machine IP</label>
-<description>IP address of the printer</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="machineIp">
+		<item-type>String</item-type>
+		<label>Machine IP</label>
+		<description>IP address of the printer</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="machineName">
-<item-type>String</item-type>
-<label>Machine Name</label>
-<description>Name of the printer</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="machineName">
+		<item-type>String</item-type>
+		<label>Machine Name</label>
+		<description>Name of the printer</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="model">
-<item-type>String</item-type>
-<label>Model</label>
-<description>Model of the printer</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="model">
+		<item-type>String</item-type>
+		<label>Model</label>
+		<description>Model of the printer</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="nozzlesNum">
-<item-type>Number</item-type>
-<label>Number of Nozzles</label>
-<description>Number of nozzles</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="nozzlesNum">
+		<item-type>Number</item-type>
+		<label>Number of Nozzles</label>
+		<description>Number of nozzles</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="storageAvailable">
-<item-type>Number:DataAmount</item-type>
-<label>Storage Available</label>
-<description>Available storage space</description>
-<state readOnly="true" pattern="%.0f %unit%"/>
-</channel-type>
+	<channel-type id="storageAvailable">
+		<item-type>Number:DataAmount</item-type>
+		<label>Storage Available</label>
+		<description>Available storage space</description>
+		<state readOnly="true" pattern="%.0f %unit%"/>
+	</channel-type>
 
-<channel-type id="update">
-<item-type>String</item-type>
-<label>Update</label>
-<description>Update information</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="update">
+		<item-type>String</item-type>
+		<label>Update</label>
+		<description>Update information</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="version">
-<item-type>String</item-type>
-<label>Version</label>
-<description>Software version</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="version">
+		<item-type>String</item-type>
+		<label>Version</label>
+		<description>Software version</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<!-- Running Status Channels -->
-<channel-type id="runningStatus">
-<item-type>String</item-type>
-<label>Running Status</label>
-<description>Current running status of the printer</description>
-<state readOnly="true"/>
-</channel-type>
+	<!-- Running Status Channels -->
+	<channel-type id="runningStatus">
+		<item-type>String</item-type>
+		<label>Running Status</label>
+		<description>Current running status of the printer</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="fanCurSpeed">
-<item-type>Number</item-type>
-<label>Fan Current Speed</label>
-<description>Current fan speed</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="fanCurSpeed">
+		<item-type>Number</item-type>
+		<label>Fan Current Speed</label>
+		<description>Current fan speed</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="fanTarSpeed">
-<item-type>Number</item-type>
-<label>Fan Target Speed</label>
-<description>Target fan speed</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="fanTarSpeed">
+		<item-type>Number</item-type>
+		<label>Fan Target Speed</label>
+		<description>Target fan speed</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="feedCurRate">
-<item-type>Number</item-type>
-<label>Feed Current Rate</label>
-<description>Current feed rate</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="feedCurRate">
+		<item-type>Number</item-type>
+		<label>Feed Current Rate</label>
+		<description>Current feed rate</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="feedTarRate">
-<item-type>Number</item-type>
-<label>Feed Target Rate</label>
-<description>Target feed rate</description>
-<state readOnly="true"/>
-</channel-type>
+	<channel-type id="feedTarRate">
+		<item-type>Number</item-type>
+		<label>Feed Target Rate</label>
+		<description>Target feed rate</description>
+		<state readOnly="true"/>
+	</channel-type>
 
-<channel-type id="heatbedCurTemp">
-<item-type>Number:Temperature</item-type>
-<label>Heatbed Current Temperature</label>
-<description>Current temperature of the heated bed</description>
-<state readOnly="true" pattern="%.0f %unit%"/>
-</channel-type>
+	<channel-type id="heatbedCurTemp">
+		<item-type>Number:Temperature</item-type>
+		<label>Heatbed Current Temperature</label>
+		<description>Current temperature of the heated bed</description>
+		<state readOnly="true" pattern="%.0f %unit%"/>
+	</channel-type>
 
-<channel-type id="heatbedTarTemp">
-<item-type>Number:Temperature</item-type>
-<label>Heatbed Target Temperature</label>
-<description>Target temperature of the heated bed</description>
-<state readOnly="true" pattern="%.0f %unit%"/>
-</channel-type>
+	<channel-type id="heatbedTarTemp">
+		<item-type>Number:Temperature</item-type>
+		<label>Heatbed Target Temperature</label>
+		<description>Target temperature of the heated bed</description>
+		<state readOnly="true" pattern="%.0f %unit%"/>
+	</channel-type>
 
 </thing:thing-descriptions>
