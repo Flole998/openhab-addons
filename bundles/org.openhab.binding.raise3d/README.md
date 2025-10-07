@@ -72,7 +72,8 @@ The printer thing requires the following configuration parameters:
 
 ## Special Behavior
 
-- When the printer is offline or unreachable, the `runningStatus` channel will be set to "offline" and `printProgress` will be set to 100.
+- When the printer cannot be reached (network error, powered off, etc.), the `runningStatus` channel will be set to "offline" and `printProgress` will be set to 100.
+- If the printer reports an error status, it will be shown as-is (e.g., "error") rather than being converted to "offline".
 - The binding automatically handles authentication and token management with the printer.
 
 ## Full Example

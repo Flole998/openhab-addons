@@ -204,13 +204,9 @@ public class Raise3dHandler extends BaseThingHandler {
             updateState(CHANNEL_VERSION, new StringType(data.version));
         }
 
-        // Running status - convert "error" to "offline" as specified
-        String runningStatus = data.runningStatus;
-        if ("error".equals(runningStatus)) {
-            runningStatus = "offline";
-        }
-        if (runningStatus != null) {
-            updateState(CHANNEL_RUNNING_STATUS, new StringType(runningStatus));
+        // Running status
+        if (data.runningStatus != null) {
+            updateState(CHANNEL_RUNNING_STATUS, new StringType(data.runningStatus));
         }
         updateState(CHANNEL_FAN_CUR_SPEED, new DecimalType(data.fanCurSpeed));
         updateState(CHANNEL_FAN_TAR_SPEED, new DecimalType(data.fanTarSpeed));
