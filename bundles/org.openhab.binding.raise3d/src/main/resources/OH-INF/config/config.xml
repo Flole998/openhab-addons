@@ -5,23 +5,21 @@
 	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0
 		https://openhab.org/schemas/config-description-1.0.0.xsd">
 
-	<config-description uri="thing-type:hpprinter:config">
+	<config-description uri="thing-type:raise3d:config">
 		<parameter name="ipAddress" type="text" required="true">
 			<label>Network Address</label>
-			<description>The IP or host name of the HP Printer</description>
+			<description>The IP address of the Raise3D printer</description>
 			<context>network-address</context>
 		</parameter>
-		<parameter name="usageInterval" type="integer" min="4">
-			<label>Usage Interval</label>
-			<description>The refresh interval in seconds for polling the printer usage information</description>
-			<default>30</default>
-			<advanced>true</advanced>
+		<parameter name="password" type="text" required="true">
+			<label>Password</label>
+			<description>The password for accessing the Raise3D printer API</description>
+			<context>password</context>
 		</parameter>
-		<parameter name="statusInterval" type="integer" min="4">
-			<label>Status Interval</label>
-			<description>The refresh interval in seconds for polling status information</description>
-			<default>4</default>
-			<advanced>true</advanced>
+		<parameter name="refreshInterval" type="integer" min="5">
+			<label>Refresh Interval</label>
+			<description>The refresh interval in seconds for polling the printer status</description>
+			<default>30</default>
 		</parameter>
 	</config-description>
 
