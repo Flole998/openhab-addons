@@ -144,9 +144,8 @@ public class Raise3dHandler extends BaseThingHandler {
     private void handleOffline() {
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Unable to communicate with printer");
 
-        // Set running_status to "offline" and print_progress to 100
+        // Set running_status to "offline"
         updateState(CHANNEL_RUNNING_STATUS, new StringType("offline"));
-        updateState(CHANNEL_PRINT_PROGRESS, new DecimalType(100));
     }
 
     private void updateChannels(Raise3dPrinterData data) {

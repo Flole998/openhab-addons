@@ -72,8 +72,7 @@ The printer thing requires the following configuration parameters:
 
 ## Special Behavior
 
-- When the printer cannot be reached (network error, powered off, etc.), the `runningStatus` channel will be set to "offline" and `printProgress` will be set to 100.
-- If the printer reports an error status, it will be shown as-is (e.g., "error") rather than being converted to "offline".
+- When the printer cannot be reached (network error, powered off, etc.), the `runningStatus` channel will be set to "offline"
 - The binding automatically handles authentication and token management with the printer.
 
 ## Full Example
@@ -136,5 +135,4 @@ sitemap raise3d label="3D Printer" {
 ## Notes
 
 - This binding is read-only; it only monitors the printer and does not support sending commands.
-- The printer must be on the same network as your openHAB instance.
 - Ensure the password matches the one configured on your Raise3D printer.
