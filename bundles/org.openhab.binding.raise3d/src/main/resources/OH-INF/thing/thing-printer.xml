@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="raise3d"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<thing-type id="printer">
+		<label>Raise3D Printer</label>
+		<description>A Raise3D 3D Printer</description>
+		<semantic-equipment-tag>Printer</semantic-equipment-tag>
+		<channels>
+			<!-- Job Information -->
+			<channel id="fileName" typeId="fileName"/>
+			<channel id="jobId" typeId="jobId"/>
+			<channel id="jobStatus" typeId="jobStatus"/>
+			<channel id="printProgress" typeId="printProgress"/>
+			<channel id="printedLayer" typeId="printedLayer"/>
+			<channel id="printedTime" typeId="printedTime"/>
+			<channel id="totalLayer" typeId="totalLayer"/>
+			<channel id="totalTime" typeId="totalTime"/>
+
+			<!-- System Information -->
+			<channel id="serialNumber" typeId="serialNumber"/>
+			<channel id="apiVersion" typeId="apiVersion"/>
+			<channel id="battery" typeId="battery"/>
+			<channel id="brightness" typeId="brightness"/>
+			<channel id="dateTime" typeId="dateTime"/>
+			<channel id="firmwareVersion" typeId="firmwareVersion"/>
+			<channel id="language" typeId="language"/>
+			<channel id="machineId" typeId="machineId"/>
+			<channel id="machineIp" typeId="machineIp"/>
+			<channel id="machineName" typeId="machineName"/>
+			<channel id="model" typeId="model"/>
+			<channel id="nozzlesNum" typeId="nozzlesNum"/>
+			<channel id="storageAvailable" typeId="storageAvailable"/>
+			<channel id="update" typeId="update"/>
+			<channel id="version" typeId="version"/>
+
+			<!-- Running Status -->
+			<channel id="runningStatus" typeId="runningStatus"/>
+			<channel id="fanCurSpeed" typeId="fanCurSpeed"/>
+			<channel id="fanTarSpeed" typeId="fanTarSpeed"/>
+			<channel id="feedCurRate" typeId="feedCurRate"/>
+			<channel id="feedTarRate" typeId="feedTarRate"/>
+			<channel id="heatbedCurTemp" typeId="heatbedCurTemp"/>
+			<channel id="heatbedTarTemp" typeId="heatbedTarTemp"/>
+		</channels>
+		<properties>
+			<property name="vendor">Raise3D</property>
+		</properties>
+		<config-description-ref uri="thing-type:raise3d:config"/>
+	</thing-type>
+
+</thing:thing-descriptions>
