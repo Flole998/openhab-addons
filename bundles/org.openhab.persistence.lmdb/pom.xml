@@ -15,7 +15,7 @@
   <name>openHAB Add-ons :: Bundles :: Persistence Service :: LMDB</name>
 
   <properties>
-    <bnd.importpackage>!com.oracle.svm.*,!javax.security.cert,!javax.tools,!org.apache.commons.logging,!org.apache.log4j.*,!org.apache.logging.log4j.*,!reactor.blockhound.*,org.openhab.core.library.types,*</bnd.importpackage>
+    <bnd.importpackage>!sun.*,!com.oracle.svm.*,!javax.security.cert,!javax.tools,!org.apache.commons.logging,!org.apache.log4j.*,!org.apache.logging.log4j.*,!reactor.blockhound.*,*</bnd.importpackage>
   </properties>
 
   <dependencies>
