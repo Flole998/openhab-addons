@@ -27,8 +27,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -135,13 +133,16 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
     @Override
     public Set<PersistenceItemInfo> getItemInfo() {
         try (Txn<ByteBuffer> txn = env.txnRead()) {
-            return db.iterate(txn).stream().map(kv -> {
+            Set<PersistenceItemInfo> items = new java.util.HashSet<>();
+            for (var kv : db.iterate(txn)) {
                 ByteBuffer val = kv.val();
                 byte[] bytes = new byte[val.remaining()];
                 val.get(bytes);
                 String json = new String(bytes, StandardCharsets.UTF_8);
-                return deserialize(json);
-            }).flatMap(LmdbPersistenceService::streamOptional).collect(Collectors.<PersistenceItemInfo> toUnmodifiableSet());
+                Optional<LmdbItem> item = deserialize(json);
+                item.ifPresent(items::add);
+            }
+            return Set.copyOf(items);
         }
     }
 
@@ -248,10 +249,6 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
         }
 
         return Optional.of(item);
-    }
-
-    private static <T> Stream<T> streamOptional(Optional<T> opt) {
-        return opt.isPresent() ? Stream.of(opt.get()) : Stream.empty();
     }
 
     @Override

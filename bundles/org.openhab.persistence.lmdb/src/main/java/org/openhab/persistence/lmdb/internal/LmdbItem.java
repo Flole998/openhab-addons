@@ -79,8 +79,8 @@ class LmdbItem implements PersistedItem, PersistenceItemInfo {
 
     @Override
     public @Nullable ZonedDateTime getLastStateChange() {
-        return lastStateChange != null ? ZonedDateTime.ofInstant(lastStateChange.toInstant(), ZoneId.systemDefault())
-                : null;
+        Date change = lastStateChange;
+        return change != null ? ZonedDateTime.ofInstant(change.toInstant(), ZoneId.systemDefault()) : null;
     }
 
     void setLastStateChange(@Nullable Date lastStateChange) {
@@ -108,6 +108,6 @@ class LmdbItem implements PersistedItem, PersistenceItemInfo {
     }
 
     boolean isValid() {
-        return name != null && state != null && timestamp != null;
+        return !name.isEmpty() && !(state instanceof UnDefType) && timestamp.getTime() != 0;
     }
 }
