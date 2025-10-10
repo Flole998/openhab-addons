@@ -16,6 +16,17 @@ Some disadvantages of LMDB persistence compared to other services:
 - It can only store one value per item (no historical data)
 - It is only possible to query the last value and not other historic values
 
+## Supported Platforms
+
+The LMDB persistence service includes native libraries for the following platforms:
+
+- Linux x86_64
+- macOS x86_64
+- Windows x86_64
+
+**Note**: ARM/aarch64 platforms (including Raspberry Pi 4/5 running 64-bit OS) are **not currently supported** due to the lack of native LMDB libraries for these architectures.
+For ARM-based systems, consider using alternative persistence services such as MapDB, RRD4j, JDBC, or InfluxDB.
+
 ## Configuration
 
 This service requires no configuration and is ready to use after installation.
