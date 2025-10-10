@@ -32,7 +32,6 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.lmdbjava.Dbi;
 import org.lmdbjava.Env;
-import org.lmdbjava.EnvFlags;
 import org.lmdbjava.Txn;
 import org.openhab.core.OpenHAB;
 import org.openhab.core.common.ThreadPoolManager;
@@ -100,7 +99,7 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
 
         File dbDir = DB_DIR.toFile();
         try {
-            env = Env.create().setMapSize(DB_SIZE).setMaxDbs(1).open(dbDir, EnvFlags.MDB_NOSUBDIR);
+            env = Env.create().setMapSize(DB_SIZE).setMaxDbs(1).open(dbDir);
             db = env.openDbi(DB_NAME, MDB_CREATE);
             logger.debug("LMDB persistence service is now activated");
         } catch (Exception e) {
