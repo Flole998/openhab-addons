@@ -24,12 +24,6 @@
       <artifactId>lmdbjava</artifactId>
       <version>0.9.1</version>
     </dependency>
-    <!-- LMDB native libraries for ARM64/aarch64 platforms -->
-    <dependency>
-      <groupId>org.lmdbjava</groupId>
-      <artifactId>lmdbjava-native-linux-android-arm64-v8a</artifactId>
-      <version>0.9.29-1</version>
-    </dependency>
     <!-- JNR dependencies need to be explicit for embedding -->
     <dependency>
       <groupId>com.github.jnr</groupId>
