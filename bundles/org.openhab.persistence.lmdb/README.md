@@ -21,11 +21,9 @@ Some disadvantages of LMDB persistence compared to other services:
 The LMDB persistence service includes native libraries for the following platforms:
 
 - Linux x86_64
+- Linux ARM64/aarch64 (including Raspberry Pi 4/5 with 64-bit OS)
 - macOS x86_64
 - Windows x86_64
-
-**Note**: ARM/aarch64 platforms (including Raspberry Pi 4/5 running 64-bit OS) are **not currently supported** due to the lack of native LMDB libraries for these architectures.
-For ARM-based systems, consider using alternative persistence services such as MapDB, RRD4j, JDBC, or InfluxDB.
 
 ## Configuration
 
