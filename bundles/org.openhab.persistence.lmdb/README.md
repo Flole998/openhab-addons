@@ -21,14 +21,9 @@ Some disadvantages of LMDB persistence compared to other services:
 The LMDB persistence service includes native libraries for the following platforms:
 
 - Linux x86_64
-- Linux ARM64/aarch64 (including Raspberry Pi 4/5 with 64-bit OS) - **Experimental**
+- Linux ARM64/aarch64 (including Raspberry Pi 4/5 with 64-bit OS)
 - macOS x86_64
 - Windows x86_64
-
-**Note for ARM64/aarch64 users**: ARM64 support is experimental. If you encounter issues loading the bundle, you may need to install the system LMDB library:
-```bash
-sudo apt-get install liblmdb0
-```
 
 ## Configuration
 

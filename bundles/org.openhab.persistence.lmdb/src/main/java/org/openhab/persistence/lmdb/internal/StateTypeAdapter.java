@@ -54,7 +54,8 @@ public class StateTypeAdapter extends TypeAdapter<State> {
             String valueAsString = value.substring(index + TYPE_SEPARATOR.length());
 
             @SuppressWarnings("unchecked")
-            Class<? extends State> valueType = (Class<? extends State>) Class.forName(valueTypeName);
+            Class<? extends State> valueType = (Class<? extends State>) Class.forName(valueTypeName, true,
+                    State.class.getClassLoader());
             return TypeParser.parseState(List.of(valueType), valueAsString);
         } catch (Exception e) {
             logger.warn("Couldn't deserialize state '{}': {}", value, e.getMessage());
