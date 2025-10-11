@@ -78,6 +78,9 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
     private final Logger logger = LoggerFactory.getLogger(LmdbPersistenceService.class);
 
     private final ExecutorService threadPool = ThreadPoolManager.getPool(getClass().getSimpleName());
+    private final java.util.concurrent.atomic.AtomicInteger pendingWrites = new java.util.concurrent.atomic.AtomicInteger(
+            0);
+    private volatile boolean active = false;
 
     private @NonNullByDefault({}) Env<ByteBuffer> env;
     private @NonNullByDefault({}) Dbi<ByteBuffer> db;
@@ -101,6 +104,7 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
         try {
             env = Env.create().setMapSize(DB_SIZE).setMaxDbs(1).open(dbDir);
             db = env.openDbi(DB_NAME, MDB_CREATE);
+            active = true;
             logger.debug("LMDB persistence service is now activated");
         } catch (Exception e) {
             logger.warn("Failed to create or open the LMDB: {}", e.getMessage());
@@ -110,13 +114,39 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
 
     @Deactivate
     public void deactivate() {
-        logger.debug("LMDB persistence service deactivated");
+        logger.debug("LMDB persistence service deactivating");
+        active = false;
+
+        // Wait for pending writes to complete
+        int maxWaitSeconds = 30;
+        int waited = 0;
+        while (pendingWrites.get() > 0 && waited < maxWaitSeconds) {
+            try {
+                Thread.sleep(100);
+                waited++;
+                if (waited % 10 == 0) {
+                    logger.debug("Waiting for {} pending writes to complete ({}/{}s)", pendingWrites.get(), waited / 10,
+                            maxWaitSeconds);
+                }
+            } catch (InterruptedException e) {
+                logger.warn("Interrupted while waiting for pending writes");
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        if (pendingWrites.get() > 0) {
+            logger.warn("{} pending writes did not complete within {} seconds", pendingWrites.get(), maxWaitSeconds);
+        }
+
+        // Now it's safe to close the database
         if (db != null) {
             db.close();
         }
         if (env != null) {
             env.close();
         }
+        logger.debug("LMDB persistence service deactivated");
     }
 
     @Override
@@ -170,19 +200,36 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
         ZonedDateTime lastStateChange = item.getLastStateChange();
         lItem.setLastStateChange(lastStateChange != null ? Date.from(lastStateChange.toInstant()) : null);
 
+        if (!active) {
+            logger.debug("Service is not active, skipping store for {}", localAlias);
+            return;
+        }
+
+        pendingWrites.incrementAndGet();
         threadPool.submit(() -> {
-            String json = serialize(lItem);
-            ByteBuffer key = ByteBuffer.allocateDirect(localAlias.getBytes(StandardCharsets.UTF_8).length);
-            key.put(localAlias.getBytes(StandardCharsets.UTF_8)).flip();
+            try {
+                if (!active) {
+                    logger.debug("Service became inactive, skipping store for {}", localAlias);
+                    return;
+                }
 
-            byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
-            ByteBuffer val = ByteBuffer.allocateDirect(jsonBytes.length);
-            val.put(jsonBytes).flip();
+                String json = serialize(lItem);
+                ByteBuffer key = ByteBuffer.allocateDirect(localAlias.getBytes(StandardCharsets.UTF_8).length);
+                key.put(localAlias.getBytes(StandardCharsets.UTF_8)).flip();
 
-            try (Txn<ByteBuffer> txn = env.txnWrite()) {
-                db.put(txn, key, val);
-                txn.commit();
-                logger.debug("Stored '{}' with state '{}' in LMDB database", localAlias, state);
+                byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
+                ByteBuffer val = ByteBuffer.allocateDirect(jsonBytes.length);
+                val.put(jsonBytes).flip();
+
+                try (Txn<ByteBuffer> txn = env.txnWrite()) {
+                    db.put(txn, key, val);
+                    txn.commit();
+                    logger.debug("Stored '{}' with state '{}' in LMDB database", localAlias, state);
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to store '{}': {}", localAlias, e.getMessage());
+            } finally {
+                pendingWrites.decrementAndGet();
             }
         });
     }
