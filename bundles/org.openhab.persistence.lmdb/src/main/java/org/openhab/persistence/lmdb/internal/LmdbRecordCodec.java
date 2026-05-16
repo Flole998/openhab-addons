@@ -49,7 +49,8 @@ class LmdbRecordCodec {
     static void encodeValue(ByteBuffer buffer, LmdbItem item) {
         buffer.put(VALUE_FORMAT_VERSION);
         buffer.putLong(item.getTimestamp().toInstant().toEpochMilli());
-        buffer.putLong(item.getLastStateChange() != null ? item.getLastStateChange().toInstant().toEpochMilli() : NULL_TIME);
+        java.time.ZonedDateTime lastStateChange = item.getLastStateChange();
+        buffer.putLong(lastStateChange != null ? lastStateChange.toInstant().toEpochMilli() : NULL_TIME);
         BinaryStateCodec.encode(buffer, item.getState());
         State lastState = item.getLastState();
         if (lastState == null) {
@@ -63,7 +64,8 @@ class LmdbRecordCodec {
     static void encodeMetadata(ByteBuffer buffer, LmdbItem item) {
         buffer.put(META_FORMAT_VERSION);
         buffer.putLong(item.getTimestamp().toInstant().toEpochMilli());
-        buffer.putLong(item.getLastStateChange() != null ? item.getLastStateChange().toInstant().toEpochMilli() : NULL_TIME);
+        java.time.ZonedDateTime lastStateChange = item.getLastStateChange();
+        buffer.putLong(lastStateChange != null ? lastStateChange.toInstant().toEpochMilli() : NULL_TIME);
     }
 
     static @Nullable LmdbItem decodeValue(String name, ByteBuffer buffer) {

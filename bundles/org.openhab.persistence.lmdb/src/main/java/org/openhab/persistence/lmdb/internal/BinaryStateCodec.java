@@ -28,7 +28,6 @@ import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.OpenClosedType;
 import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.PlayPauseType;
-import org.openhab.core.library.types.PointType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.RawType;
 import org.openhab.core.library.types.RewindFastforwardType;
@@ -43,14 +42,15 @@ import org.openhab.core.types.TypeParser;
  */
 class BinaryStateCodec {
 
-    private static final List<Class<? extends State>> ID_TO_TYPE = List.of(DecimalType.class, HSBType.class,
+    @SuppressWarnings("unchecked")
+    private static final Class<? extends State>[] ID_TO_TYPE = new Class[] { DecimalType.class, HSBType.class,
             OnOffType.class, PercentType.class, QuantityType.class, StringType.class, DateTimeType.class,
             OpenClosedType.class, UpDownType.class, StopMoveType.class, PlayPauseType.class, NextPreviousType.class,
-            IncreaseDecreaseType.class, RewindFastforwardType.class, RawType.class, PointType.class);
+            IncreaseDecreaseType.class, RewindFastforwardType.class, RawType.class };
 
     private static final Map<Class<? extends State>, Integer> TYPE_TO_ID = java.util.stream.IntStream
-            .range(0, ID_TO_TYPE.size()).boxed().collect(java.util.stream.Collectors.toUnmodifiableMap(ID_TO_TYPE::get,
-                    java.util.function.Function.identity()));
+            .range(0, ID_TO_TYPE.length).boxed().collect(java.util.stream.Collectors
+                    .toUnmodifiableMap(index -> ID_TO_TYPE[index], java.util.function.Function.identity()));
 
     private BinaryStateCodec() {
     }
@@ -74,7 +74,7 @@ class BinaryStateCodec {
 
     static @Nullable State decode(ByteBuffer buffer) {
         int typeId = Byte.toUnsignedInt(buffer.get());
-        if (typeId >= ID_TO_TYPE.size()) {
+        if (typeId >= ID_TO_TYPE.length) {
             return null;
         }
 
@@ -87,7 +87,7 @@ class BinaryStateCodec {
         buffer.get(valueBytes);
         String valueAsString = new String(valueBytes, StandardCharsets.UTF_8);
 
-        Class<? extends State> valueType = ID_TO_TYPE.get(typeId);
+        Class<? extends State> valueType = ID_TO_TYPE[typeId];
         Optional<State> parsed = Optional.ofNullable(TypeParser.parseState(List.of(valueType), valueAsString));
         return parsed.orElse(null);
     }

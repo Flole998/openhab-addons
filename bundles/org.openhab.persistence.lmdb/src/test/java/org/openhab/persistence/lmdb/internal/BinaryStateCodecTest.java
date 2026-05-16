@@ -60,10 +60,9 @@ class BinaryStateCodecTest {
     private static final List<StringType> STRING_TYPE_VALUES = List.of(StringType.valueOf("test"),
             StringType.valueOf("a b c 1 2 3"), StringType.valueOf(""), StringType.valueOf("@@@###   @@@"));
 
-    private static final List<State> VALUES = Stream
-            .of(DECIMAL_TYPE_VALUES, HSB_TYPE_VALUES, ON_OFF_TYPE_VALUES, PERCENT_TYPE_VALUES, QUANTITY_TYPE_VALUES,
-                    STRING_TYPE_VALUES)
-            .flatMap(List::stream).collect(Collectors.toList());
+    private static final List<State> VALUES = Stream.of(DECIMAL_TYPE_VALUES, HSB_TYPE_VALUES, ON_OFF_TYPE_VALUES,
+            PERCENT_TYPE_VALUES, QUANTITY_TYPE_VALUES, STRING_TYPE_VALUES).flatMap(List::stream)
+            .collect(Collectors.toList());
 
     @ParameterizedTest
     @MethodSource

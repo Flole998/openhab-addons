@@ -34,7 +34,7 @@ class LmdbRecordCodecTest {
         item.setName("myItem");
         item.setState(OnOffType.ON);
         item.setTimestamp(new Date(1700000000000L));
-        item.setLastState(PercentType.TEN);
+        item.setLastState(PercentType.valueOf("10"));
         item.setLastStateChange(new Date(1700000001000L));
 
         ByteBuffer encoded = ByteBuffer.allocate(LmdbRecordCodec.valueEncodedSize(item));

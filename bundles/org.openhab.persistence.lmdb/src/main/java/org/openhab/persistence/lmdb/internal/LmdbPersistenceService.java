@@ -254,11 +254,20 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
     }
 
     private byte[] getKeyBytes(String key) {
-        return keyBytesCache.computeIfAbsent(key, value -> value.getBytes(StandardCharsets.UTF_8));
+        byte[] cachedBytes = keyBytesCache.get(key);
+        if (cachedBytes != null) {
+            return cachedBytes;
+        }
+
+        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+        byte[] existing = keyBytesCache.putIfAbsent(key, keyBytes);
+        return existing != null ? existing : keyBytes;
     }
 
     private void startWriterThread() {
-        Thread localWriterThread = Thread.ofVirtual().name("lmdb-persistence-writer").start(this::writerLoop);
+        Thread localWriterThread = new Thread(this::writerLoop, "lmdb-persistence-writer");
+        localWriterThread.setDaemon(true);
+        localWriterThread.start();
         writerThread = localWriterThread;
     }
 
