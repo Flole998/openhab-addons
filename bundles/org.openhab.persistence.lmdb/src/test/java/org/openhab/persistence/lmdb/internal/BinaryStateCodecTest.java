@@ -10,21 +10,22 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.persistence.lmdb;
+package org.openhab.persistence.lmdb.internal;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.HSBType;
 import org.openhab.core.library.types.OnOffType;
@@ -35,20 +36,9 @@ import org.openhab.core.library.unit.ImperialUnits;
 import org.openhab.core.library.unit.SIUnits;
 import org.openhab.core.library.unit.Units;
 import org.openhab.core.types.State;
-import org.openhab.persistence.lmdb.internal.StateTypeAdapter;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-/**
- *
- * @author Martin Kühl - Initial contribution (MapDB)
- * @author Florian Hotze - LMDB adaptation
- */
 @NonNullByDefault
-public class StateTypeAdapterTest {
-    private Gson mapper = new GsonBuilder().setDateFormat(DateTimeType.DATE_PATTERN_JSON_COMPAT)
-            .registerTypeHierarchyAdapter(State.class, new StateTypeAdapter()).create();
+class BinaryStateCodecTest {
 
     private static final List<DecimalType> DECIMAL_TYPE_VALUES = List.of(DecimalType.ZERO, new DecimalType(1.123),
             new DecimalType(10000000));
@@ -70,19 +60,25 @@ public class StateTypeAdapterTest {
     private static final List<StringType> STRING_TYPE_VALUES = List.of(StringType.valueOf("test"),
             StringType.valueOf("a b c 1 2 3"), StringType.valueOf(""), StringType.valueOf("@@@###   @@@"));
 
-    private static final List<State> VALUES = Stream.of(DECIMAL_TYPE_VALUES, HSB_TYPE_VALUES, ON_OFF_TYPE_VALUES,
-            PERCENT_TYPE_VALUES, QUANTITY_TYPE_VALUES, STRING_TYPE_VALUES).flatMap(list -> list.stream())
-            .collect(Collectors.toList());
+    private static final List<State> VALUES = Stream
+            .of(DECIMAL_TYPE_VALUES, HSB_TYPE_VALUES, ON_OFF_TYPE_VALUES, PERCENT_TYPE_VALUES, QUANTITY_TYPE_VALUES,
+                    STRING_TYPE_VALUES)
+            .flatMap(List::stream).collect(Collectors.toList());
 
     @ParameterizedTest
     @MethodSource
-    public void readWriteRoundtripShouldRecreateTheWrittenState(State state) {
-        String json = mapper.toJson(state);
-        State actual = Objects.requireNonNull(mapper.fromJson(json, State.class));
-        assertThat(actual, is(equalTo(state)));
+    void roundtripShouldRecreateWrittenState(State state) {
+        ByteBuffer buffer = ByteBuffer.allocate(BinaryStateCodec.encodedSize(state));
+        BinaryStateCodec.encode(buffer, state);
+        buffer.flip();
+
+        State decoded = BinaryStateCodec.decode(buffer);
+
+        assertNotNull(decoded);
+        assertThat(decoded, is(equalTo(state)));
     }
 
-    public static Stream<State> readWriteRoundtripShouldRecreateTheWrittenState() {
+    static Stream<State> roundtripShouldRecreateWrittenState() {
         return VALUES.stream();
     }
 }

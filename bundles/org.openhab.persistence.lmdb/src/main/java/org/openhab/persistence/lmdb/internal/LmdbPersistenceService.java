@@ -13,6 +13,9 @@
 package org.openhab.persistence.lmdb.internal;
 
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
+import static org.lmdbjava.EnvFlags.MDB_MAPASYNC;
+import static org.lmdbjava.EnvFlags.MDB_NOMETASYNC;
+import static org.lmdbjava.EnvFlags.MDB_NOSYNC;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,9 +27,10 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -34,9 +38,7 @@ import org.lmdbjava.Dbi;
 import org.lmdbjava.Env;
 import org.lmdbjava.Txn;
 import org.openhab.core.OpenHAB;
-import org.openhab.core.common.ThreadPoolManager;
 import org.openhab.core.items.Item;
-import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.persistence.FilterCriteria;
 import org.openhab.core.persistence.HistoricItem;
 import org.openhab.core.persistence.PersistedItem;
@@ -44,7 +46,6 @@ import org.openhab.core.persistence.PersistenceItemInfo;
 import org.openhab.core.persistence.PersistenceService;
 import org.openhab.core.persistence.QueryablePersistenceService;
 import org.openhab.core.persistence.strategy.PersistenceStrategy;
-import org.openhab.core.types.State;
 import org.openhab.core.types.UnDefType;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
@@ -52,9 +53,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * This is the implementation of the LMDB {@link PersistenceService}. To learn more about LMDB please visit their
@@ -72,21 +70,25 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
     private static final String SERVICE_ID = "lmdb";
     private static final String SERVICE_LABEL = "LMDB";
     private static final Path DB_DIR = new File(OpenHAB.getUserDataFolder(), "persistence").toPath().resolve("lmdb");
-    private static final String DB_NAME = "itemStore";
-    private static final long DB_SIZE = 10485760L; // 10MB initial size
+    private static final String VALUE_DB_NAME = "itemStore";
+    private static final String META_DB_NAME = "itemInfoStore";
+    private static final long DB_SIZE = 268435456L; // 256MB initial size
+
+    private static final int WRITER_BATCH_SIZE = 256;
+    private static final long WRITER_POLL_TIMEOUT_MS = 100;
 
     private final Logger logger = LoggerFactory.getLogger(LmdbPersistenceService.class);
 
-    private final ExecutorService threadPool = ThreadPoolManager.getPool(getClass().getSimpleName());
-    private final java.util.concurrent.atomic.AtomicInteger pendingWrites = new java.util.concurrent.atomic.AtomicInteger(
-            0);
+    private final LinkedBlockingQueue<WriteRequest> writeQueue = new LinkedBlockingQueue<>();
+    private final ConcurrentHashMap<String, byte[]> keyBytesCache = new ConcurrentHashMap<>();
+    private final ThreadLocal<ByteBuffer> readKeyBuffer = ThreadLocal.withInitial(() -> ByteBuffer.allocateDirect(128));
+
     private volatile boolean active = false;
+    private volatile @Nullable Thread writerThread;
 
     private @NonNullByDefault({}) Env<ByteBuffer> env;
-    private @NonNullByDefault({}) Dbi<ByteBuffer> db;
-
-    private transient Gson mapper = new GsonBuilder().setDateFormat(DateTimeType.DATE_PATTERN_JSON_COMPAT)
-            .registerTypeHierarchyAdapter(State.class, new StateTypeAdapter()).create();
+    private @NonNullByDefault({}) Dbi<ByteBuffer> valueDb;
+    private @NonNullByDefault({}) Dbi<ByteBuffer> metaDb;
 
     @Activate
     public void activate() {
@@ -102,9 +104,11 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
 
         File dbDir = DB_DIR.toFile();
         try {
-            env = Env.create().setMapSize(DB_SIZE).setMaxDbs(1).open(dbDir);
-            db = env.openDbi(DB_NAME, MDB_CREATE);
+            env = Env.create().setMapSize(DB_SIZE).setMaxDbs(2).open(dbDir, MDB_NOSYNC, MDB_NOMETASYNC, MDB_MAPASYNC);
+            valueDb = env.openDbi(VALUE_DB_NAME, MDB_CREATE);
+            metaDb = env.openDbi(META_DB_NAME, MDB_CREATE);
             active = true;
+            startWriterThread();
             logger.debug("LMDB persistence service is now activated");
         } catch (Exception e) {
             logger.warn("Failed to create or open the LMDB: {}", e.getMessage());
@@ -117,35 +121,31 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
         logger.debug("LMDB persistence service deactivating");
         active = false;
 
-        // Wait for pending writes to complete
-        int maxWaitSeconds = 30;
-        int waited = 0;
-        while (pendingWrites.get() > 0 && waited < maxWaitSeconds) {
+        Thread localWriterThread = writerThread;
+        if (localWriterThread != null) {
+            localWriterThread.interrupt();
             try {
-                Thread.sleep(100);
-                waited++;
-                if (waited % 10 == 0) {
-                    logger.debug("Waiting for {} pending writes to complete ({}/{}s)", pendingWrites.get(), waited / 10,
-                            maxWaitSeconds);
-                }
+                localWriterThread.join(TimeUnit.SECONDS.toMillis(30));
             } catch (InterruptedException e) {
-                logger.warn("Interrupted while waiting for pending writes");
                 Thread.currentThread().interrupt();
-                break;
             }
+            writerThread = null;
         }
 
-        if (pendingWrites.get() > 0) {
-            logger.warn("{} pending writes did not complete within {} seconds", pendingWrites.get(), maxWaitSeconds);
+        if (valueDb != null) {
+            valueDb.close();
         }
-
-        // Now it's safe to close the database
-        if (db != null) {
-            db.close();
+        if (metaDb != null) {
+            metaDb.close();
         }
         if (env != null) {
             env.close();
         }
+
+        writeQueue.clear();
+        keyBytesCache.clear();
+        readKeyBuffer.remove();
+
         logger.debug("LMDB persistence service deactivated");
     }
 
@@ -161,15 +161,22 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
 
     @Override
     public Set<PersistenceItemInfo> getItemInfo() {
+        if (!active) {
+            return Set.of();
+        }
+
         try (Txn<ByteBuffer> txn = env.txnRead()) {
             Set<PersistenceItemInfo> items = new java.util.HashSet<>();
-            for (var kv : db.iterate(txn)) {
-                ByteBuffer val = kv.val();
-                byte[] bytes = new byte[val.remaining()];
-                val.get(bytes);
-                String json = new String(bytes, StandardCharsets.UTF_8);
-                Optional<LmdbItem> item = deserialize(json);
-                item.ifPresent(items::add);
+            for (var kv : metaDb.iterate(txn)) {
+                ByteBuffer keyBuffer = kv.key();
+                byte[] keyBytes = new byte[keyBuffer.remaining()];
+                keyBuffer.get(keyBytes);
+                String itemName = new String(keyBytes, StandardCharsets.UTF_8);
+
+                ByteBuffer metaBuffer = kv.val();
+                if (LmdbRecordCodec.isValidMetadata(metaBuffer)) {
+                    items.add(new LmdbItemInfo(itemName));
+                }
             }
             return Set.copyOf(items);
         }
@@ -182,123 +189,141 @@ public class LmdbPersistenceService implements QueryablePersistenceService {
 
     @Override
     public void store(Item item, @Nullable String alias) {
-        if (item.getState() instanceof UnDefType) {
+        if (item.getState() instanceof UnDefType || !active) {
             return;
         }
 
-        // PersistenceManager passes SimpleItemConfiguration.alias which can be null
         String localAlias = alias == null ? item.getName() : alias;
-        logger.debug("store called for {}", localAlias);
-
-        State state = item.getState();
         LmdbItem lItem = new LmdbItem();
         lItem.setName(localAlias);
-        lItem.setState(state);
+        lItem.setState(item.getState());
         lItem.setLastState(item.getLastState());
+
         ZonedDateTime lastStateUpdate = item.getLastStateUpdate();
         lItem.setTimestamp(lastStateUpdate != null ? Date.from(lastStateUpdate.toInstant()) : new Date());
+
         ZonedDateTime lastStateChange = item.getLastStateChange();
         lItem.setLastStateChange(lastStateChange != null ? Date.from(lastStateChange.toInstant()) : null);
 
-        if (!active) {
-            logger.debug("Service is not active, skipping store for {}", localAlias);
-            return;
-        }
-
-        pendingWrites.incrementAndGet();
-        threadPool.submit(() -> {
-            try {
-                if (!active) {
-                    logger.debug("Service became inactive, skipping store for {}", localAlias);
-                    return;
-                }
-
-                String json = serialize(lItem);
-                ByteBuffer key = ByteBuffer.allocateDirect(localAlias.getBytes(StandardCharsets.UTF_8).length);
-                key.put(localAlias.getBytes(StandardCharsets.UTF_8)).flip();
-
-                byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
-                ByteBuffer val = ByteBuffer.allocateDirect(jsonBytes.length);
-                val.put(jsonBytes).flip();
-
-                try (Txn<ByteBuffer> txn = env.txnWrite()) {
-                    db.put(txn, key, val);
-                    txn.commit();
-                    logger.debug("Stored '{}' with state '{}' in LMDB database", localAlias, state);
-                }
-            } catch (Exception e) {
-                logger.warn("Failed to store '{}': {}", localAlias, e.getMessage());
-            } finally {
-                pendingWrites.decrementAndGet();
-            }
-        });
+        byte[] keyBytes = getKeyBytes(localAlias);
+        writeQueue.offer(new WriteRequest(keyBytes, lItem));
     }
 
     @Override
     public Iterable<HistoricItem> query(FilterCriteria filter) {
         String itemName = filter.getItemName();
-        if (itemName == null) {
+        if (itemName == null || !active) {
             return List.of();
         }
 
-        ByteBuffer key = ByteBuffer.allocateDirect(itemName.getBytes(StandardCharsets.UTF_8).length);
-        key.put(itemName.getBytes(StandardCharsets.UTF_8)).flip();
-
-        try (Txn<ByteBuffer> txn = env.txnRead()) {
-            ByteBuffer val = db.get(txn, key);
-            if (val == null) {
-                return List.of();
-            }
-            byte[] bytes = new byte[val.remaining()];
-            val.get(bytes);
-            String json = new String(bytes, StandardCharsets.UTF_8);
-            Optional<LmdbItem> item = deserialize(json);
-            return item.isPresent() ? List.of(item.get()) : List.of();
-        }
+        LmdbItem item = readItem(itemName, itemName);
+        return item != null ? List.of(item) : List.of();
     }
 
     @Override
     public @Nullable PersistedItem persistedItem(String itemName, @Nullable String alias) {
-        String key = alias != null ? alias : itemName;
-        ByteBuffer keyBuf = ByteBuffer.allocateDirect(key.getBytes(StandardCharsets.UTF_8).length);
-        keyBuf.put(key.getBytes(StandardCharsets.UTF_8)).flip();
-
-        try (Txn<ByteBuffer> txn = env.txnRead()) {
-            ByteBuffer val = db.get(txn, keyBuf);
-            if (val == null) {
-                return null;
-            }
-            byte[] bytes = new byte[val.remaining()];
-            val.get(bytes);
-            String json = new String(bytes, StandardCharsets.UTF_8);
-            Optional<LmdbItem> item = deserialize(json);
-            LmdbItem dbItem = item.orElse(null);
-            if (dbItem != null) {
-                dbItem.setName(itemName);
-            }
-            return dbItem;
-        }
-    }
-
-    private String serialize(LmdbItem item) {
-        return mapper.toJson(item);
-    }
-
-    @SuppressWarnings("null")
-    private Optional<LmdbItem> deserialize(String json) {
-        LmdbItem item = mapper.fromJson(json, LmdbItem.class);
-        if (item == null || !item.isValid()) {
-            logger.warn("Deserialized invalid item: {}", item);
-            return Optional.empty();
-        } else if (logger.isDebugEnabled()) {
-            logger.debug("Deserialized '{}' with state '{}' from '{}'", item.getName(), item.getState(), json);
+        if (!active) {
+            return null;
         }
 
-        return Optional.of(item);
+        String keyName = alias != null ? alias : itemName;
+        LmdbItem dbItem = readItem(keyName, itemName);
+        if (dbItem != null) {
+            dbItem.setName(itemName);
+        }
+        return dbItem;
     }
 
     @Override
     public List<PersistenceStrategy> getDefaultStrategies() {
         return List.of(PersistenceStrategy.Globals.RESTORE, PersistenceStrategy.Globals.CHANGE);
+    }
+
+    private @Nullable LmdbItem readItem(String keyName, String itemNameForRecord) {
+        byte[] keyBytes = getKeyBytes(keyName);
+        ByteBuffer keyBuffer = resetBuffer(readKeyBuffer.get(), keyBytes.length);
+        keyBuffer.put(keyBytes).flip();
+
+        try (Txn<ByteBuffer> txn = env.txnRead()) {
+            ByteBuffer value = valueDb.get(txn, keyBuffer);
+            if (value == null) {
+                return null;
+            }
+            return LmdbRecordCodec.decodeValue(itemNameForRecord, value);
+        }
+    }
+
+    private byte[] getKeyBytes(String key) {
+        return keyBytesCache.computeIfAbsent(key, value -> value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void startWriterThread() {
+        Thread localWriterThread = Thread.ofVirtual().name("lmdb-persistence-writer").start(this::writerLoop);
+        writerThread = localWriterThread;
+    }
+
+    private void writerLoop() {
+        ByteBuffer keyBuffer = ByteBuffer.allocateDirect(128);
+        ByteBuffer valueBuffer = ByteBuffer.allocateDirect(512);
+        ByteBuffer metaBuffer = ByteBuffer.allocateDirect(64);
+
+        List<WriteRequest> batch = new java.util.ArrayList<>(WRITER_BATCH_SIZE);
+
+        while (active || !writeQueue.isEmpty()) {
+            try {
+                WriteRequest first = writeQueue.poll(WRITER_POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                if (first == null) {
+                    continue;
+                }
+
+                batch.clear();
+                batch.add(first);
+                writeQueue.drainTo(batch, WRITER_BATCH_SIZE - 1);
+
+                try (Txn<ByteBuffer> txn = env.txnWrite()) {
+                    for (WriteRequest request : batch) {
+                        LmdbItem item = request.item();
+                        byte[] keyBytes = request.keyBytes();
+
+                        keyBuffer = resetBuffer(keyBuffer, keyBytes.length);
+                        keyBuffer.put(keyBytes).flip();
+
+                        int valueSize = LmdbRecordCodec.valueEncodedSize(item);
+                        valueBuffer = resetBuffer(valueBuffer, valueSize);
+                        LmdbRecordCodec.encodeValue(valueBuffer, item);
+                        valueBuffer.flip();
+
+                        valueDb.put(txn, keyBuffer, valueBuffer);
+
+                        keyBuffer.rewind();
+
+                        int metaSize = LmdbRecordCodec.metadataEncodedSize();
+                        metaBuffer = resetBuffer(metaBuffer, metaSize);
+                        LmdbRecordCodec.encodeMetadata(metaBuffer, item);
+                        metaBuffer.flip();
+
+                        metaDb.put(txn, keyBuffer, metaBuffer);
+                    }
+                    txn.commit();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (RuntimeException e) {
+                logger.warn("Failed to flush LMDB write batch: {}", e.getMessage());
+            }
+        }
+    }
+
+    private static ByteBuffer resetBuffer(ByteBuffer current, int requiredSize) {
+        ByteBuffer buffer = current;
+        if (buffer.capacity() < requiredSize) {
+            int nextSize = Math.max(requiredSize, buffer.capacity() * 2);
+            buffer = ByteBuffer.allocateDirect(nextSize);
+        }
+        buffer.clear();
+        return buffer;
+    }
+
+    private record WriteRequest(byte[] keyBytes, LmdbItem item) {
     }
 }
